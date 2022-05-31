@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WingedEdgeMesh
+public class HalfEdgeMesh
 {
     
     public List<WingedEdge> edges = new List<WingedEdge>();
     public List<Face> faces = new List<Face>();
     public List<Vertex> vertices = new List<Vertex>();
 
-    public WingedEdgeMesh()
+    public HalfEdgeMesh()
     {
         WingedEdge edge;
         var startVertex = new Vertex(0, new Vector3(0.0f, 0.0f, 0.0f));
@@ -93,7 +93,7 @@ public class WingedEdgeMesh
     }
     
     
-    public WingedEdgeMesh(Mesh mesh)
+    public HalfEdgeMesh(Mesh mesh)
     {
         Vector3[] vfVertices = mesh.vertices; // Vertex Face vertices
         int[] vfQuads = mesh.GetIndices(0); // Vertex Face quads
@@ -265,15 +265,11 @@ public class WingedEdgeMesh
 }
 
 
-public class WingedEdge : IComparable<WingedEdge>
+public class HalfEdge : IComparable<WingedEdge>
 {
 
-    public WingedEdge startCW = null;
-    public WingedEdge startCCW = null;
-    public WingedEdge endCW = null;
-    public WingedEdge endCCW = null;
-    public Face rightFace;
-    public Face leftFace;
+    public HalfEdge nextEdge;
+    public HalfEdge previousEdge;
     public int index;
 
     public Vertex startVertex { get; set; }
@@ -281,12 +277,11 @@ public class WingedEdge : IComparable<WingedEdge>
     public Vertex endVertex { get; set; }
 
 
-    public WingedEdge(int index, Vertex startVertex, Vertex endVertex, Face rightface)
+    public HalfEdge(int index, Vertex startVertex, Vertex endVertex)
     {
         this.index = index;
         this.startVertex = startVertex;
         this.endVertex = endVertex;
-        this.rightFace = rightface;
     }
 
     public int CompareTo(WingedEdge other)
@@ -298,180 +293,5 @@ public class WingedEdge : IComparable<WingedEdge>
 
         //Return the difference in index.
         return index - other.index;
-    }
-
-    public List<WingedEdge> getFanCCW(Vertex positionVertex){
-        List<WingedEdge> FanCCW = new List<WingedEdge>();
-        FanCCW.Add(this);
-        bool isDone = false;
-        if(positionVertex == endVertex) 
-        {
-            FanCCW.Add(this.endCCW);
-            while (!isDone)
-            {
-                int position = FanCCW.Count -1 ;
-                WingedEdge lastEdge = FanCCW[position];
-                WingedEdge beforeLasteEdge = FanCCW[position - 1];
-                if(lastEdge.leftFace == null) {
-                    isDone = true;
-                    break;
-                }
-                if(lastEdge.rightFace == null) {
-                    isDone = true;
-                    break;
-                }
-                if(lastEdge.endCCW == this)  {
-                    isDone = true;
-                    break;
-                }
-                if(lastEdge.startCCW == this) {
-                    isDone = true;
-                    break;
-                }
-                if(lastEdge.startCW == beforeLasteEdge) {
-                    FanCCW.Add(FanCCW[position].startCCW);
-                }
-                if(lastEdge.endCW == beforeLasteEdge) {
-                    FanCCW.Add(FanCCW[position].endCCW);
-                }
-            }
-        }
-        else if (positionVertex == startVertex)
-        {
-            FanCCW.Add(this.startCCW);
-            while (!isDone)
-            {
-                int position = FanCCW.Count -1 ;
-                WingedEdge lastEdge = FanCCW[position];
-                WingedEdge beforeLasteEdge = FanCCW[position - 1];
-                if(lastEdge.leftFace == null) {
-                    isDone = true;
-                    break;
-                }
-                if(lastEdge.rightFace == null) {
-                    isDone = true;
-                    break;
-                }
-                if(lastEdge.endCW == this) {
-                    isDone = true;
-                    break;
-                }
-                if(lastEdge.startCW == this) {
-                    isDone = true;
-                    break;
-                }
-                if(lastEdge.startCCW == beforeLasteEdge) {
-                    FanCCW.Add(FanCCW[position].startCW);
-                }
-                if(lastEdge.endCCW == beforeLasteEdge) {
-                    FanCCW.Add(FanCCW[position].endCW);
-                }
-            }
-        }
-        return FanCCW;
-    }
-
-    public List<WingedEdge> getFanCW(Vertex positionVertex){
-        List<WingedEdge> FanCW = new List<WingedEdge>();
-        FanCW.Add(this);
-        bool isDone = false;
-        if(positionVertex == endVertex) 
-        {
-            FanCW.Add(this.endCW);
-            while (!isDone)
-            {
-                int position = FanCW.Count -1 ;
-                WingedEdge lastEdge = FanCW[position];
-                WingedEdge beforeLasteEdge = FanCW[position - 1];
-                if(lastEdge.leftFace == null) {
-                    isDone = true;
-                    break;
-                }
-                if(lastEdge.rightFace == null) {
-                    isDone = true;
-                    break;
-                }
-                if(lastEdge.endCW == this) {
-                    isDone = true;
-                    break;
-                }
-                if(lastEdge.startCW == this) {
-                    isDone = true;
-                    break;
-                }
-                if(lastEdge.startCCW == beforeLasteEdge) {
-                    FanCW.Add(lastEdge.endCW);
-                }
-                if(lastEdge.endCCW == beforeLasteEdge) {
-                    FanCW.Add(lastEdge.startCW);
-                }
-            }
-        }
-        else if (positionVertex == startVertex)
-        {
-            FanCW.Add(this.startCW);
-            while (!isDone)
-            {
-                int position = FanCW.Count -1 ;
-                WingedEdge lastEdge = FanCW[position];
-                WingedEdge beforeLasteEdge = FanCW[position - 1];
-                if(lastEdge.leftFace == null) {
-                    isDone = true;
-                    break;
-                }
-                if(lastEdge.rightFace == null) {
-                    isDone = true;
-                    break;
-                }
-                if(lastEdge.endCCW == this) {
-                    isDone = true;
-                    break;
-                }
-                if(lastEdge.startCCW == this) {
-                    isDone = true;
-                    break;
-                }
-                if(lastEdge.startCW == beforeLasteEdge) {
-                    FanCW.Add(lastEdge.endCCW);
-                }
-                if(lastEdge.endCW == beforeLasteEdge) {
-                    FanCW.Add(lastEdge.startCCW);
-                }
-            }
-        }
-        return FanCW;
-    }
-}
-
-public class Vertex
-{
-    private int index;
-    private Vector3 pos;
-
-    public Vertex(int i, Vector3 pos)
-    {
-        index = i;
-        this.pos = pos;
-    }
-
-    public Vector3 GetPos()
-    {
-        return pos;
-    }
-
-    public int getIndex()
-    {
-        return index;
-    }
-}
-
-public class Face
-{
-    private int i;
-    public WingedEdge edge;
-
-    public Face(int i)
-    {
-        this.i = i;
     }
 }

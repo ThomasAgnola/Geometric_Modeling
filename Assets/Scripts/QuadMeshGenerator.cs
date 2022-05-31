@@ -24,12 +24,12 @@ public class QuadMeshGenerator : MonoBehaviour
         //m_QuadMesh = CreateCube(new Vector3(2, 2, 2));
         //m_QuadMesh = CreateChip(new Vector3(2, 2, 2));
         //test = new WingedEdgeMesh(m_QuadMesh);
-        test = new WingedEdgeMesh();
-        m_WingedMesh = test.SimpleMesh();
+        test = new WingedEdgeMesh(m_QuadMesh);
+        m_WingedMesh = test.getMesh();
         
         m_mf.mesh = m_WingedMesh;
         //m_mf.mesh = m_QuadMesh;
-        Debug.Log(ExportMeshToCSV(m_QuadMesh));
+        Debug.Log(ExportMeshToCSV(m_WingedMesh));
     }
     void Start()
     {
@@ -259,7 +259,7 @@ public class QuadMeshGenerator : MonoBehaviour
 
     void DrawEdges(){
         GUIStyle guiStyle = new GUIStyle();
-        guiStyle.fontSize = 24;
+        guiStyle.fontSize = 18;
         guiStyle.normal.textColor = Color.blue;
 
         for(int i = 0; i < test.edges.Count; i++)
@@ -275,11 +275,11 @@ public class QuadMeshGenerator : MonoBehaviour
             if ( currentEdge.startCCW != null ) indexStartCCW = currentEdge.startCCW.index.ToString();
             if ( currentEdge.endCW != null ) indexEndCW = currentEdge.endCW.index.ToString();
             if ( currentEdge.endCCW != null ) indexEndCCW = currentEdge.endCCW.index.ToString();
-            Handles.Label((startpos+endpos)/2, new GUIContent(i.ToString() + 
-            "(" + indexStartCW + ")" +
-            "(" + indexStartCCW + ")" + 
-            "(" + indexEndCW +")" + 
-            "(" + indexEndCCW +")"), guiStyle);
+            Handles.Label((startpos+endpos)/2, new GUIContent(i.ToString() + "\n" +
+            "( StartCW : " + indexStartCW + ")" + "\n" +
+            "( StartCCW : " + indexStartCCW + ")" + "\n" +
+            "( EndCW : " + indexEndCW +")" + "\n" +
+            "( EndCCW : " + indexEndCCW +")"), guiStyle);
             Gizmos.DrawLine(startpos, endpos);
         }
     }

@@ -5,13 +5,13 @@ using UnityEngine;
 public class HalfEdgeMesh
 {
     
-    public List<WingedEdge> edges = new List<WingedEdge>();
+    public List<HalfEdge> edges = new List<HalfEdge>();
     public List<Face> faces = new List<Face>();
     public List<Vertex> vertices = new List<Vertex>();
 
     public HalfEdgeMesh()
     {
-        WingedEdge edge;
+        HalfEdge edge;
         var startVertex = new Vertex(0, new Vector3(0.0f, 0.0f, 0.0f));
         var endVertex = new Vertex(0, new Vector3(0.0f, 0.0f, 0.0f));
 
@@ -28,43 +28,40 @@ public class HalfEdgeMesh
         // (|  )
         startVertex = vertices[0];
         endVertex = vertices[1];
-        edge = new WingedEdge(0, startVertex, endVertex, face);
+        edge = new HalfEdge(0, startVertex, endVertex, face);
         edges.Add(edge);
-        face.edge = edge;
         // ( ¯ )
         startVertex = vertices[1];
         endVertex = vertices[2];
-        edge = new WingedEdge(1, startVertex, endVertex, face);
+        edge = new HalfEdge(1, startVertex, endVertex, face);
         edges.Add(edge);
         // (  |)
         startVertex = vertices[2];
         endVertex = vertices[3];
-        WingedEdge otheredge = new WingedEdge(2, startVertex, endVertex, face);
-        edge = new WingedEdge(2, startVertex, endVertex, face);
+        edge = new HalfEdge(2, startVertex, endVertex, face);
         edges.Add(edge);
         // ( _ )
         startVertex = vertices[3];
         endVertex = vertices[0];
-        edge = new WingedEdge(3, startVertex, endVertex, face);
+        edge = new HalfEdge(3, startVertex, endVertex, face);
         edges.Add(edge);
         faces.Add(face);
 
         face = new Face(2);
-        face.edge = otheredge;
 
         startVertex = vertices[2];
         endVertex = vertices[4];
-        edge = new WingedEdge(4, startVertex, endVertex, face);
+        edge = new HalfEdge(4, startVertex, endVertex, face);
         edges.Add(edge);
 
         startVertex = vertices[4];
         endVertex = vertices[5];
-        edge = new WingedEdge(5, startVertex, endVertex, face);
+        edge = new HalfEdge(5, startVertex, endVertex, face);
         edges.Add(edge);
 
         startVertex = vertices[5];
         endVertex = vertices[3];
-        edge = new WingedEdge(6, startVertex, endVertex, face);
+        edge = new HalfEdge(6, startVertex, endVertex, face);
         edges.Add(edge);
         faces.Add(face);
 
@@ -73,20 +70,11 @@ public class HalfEdgeMesh
             face = faces[i];
             for (int k = 0; k < edges.Count; k++)
             {
-                WingedEdge currentEdge = edges[k];
-                WingedEdge nextEdge = edges[ ( k + 1 ) % 4 ];
-                WingedEdge prevEdge = edges[ ( k + 3 ) % 4 ];
-                // traitement en fonction de l'orientation de l'arrête
-                if(currentEdge.rightFace == face)
-                {
-                    currentEdge.startCW = prevEdge;
-                    currentEdge.endCCW = nextEdge;
-                }
-                else
-                {
-                    currentEdge.startCCW = nextEdge;
-                    currentEdge.endCW = prevEdge;
-                }
+                HalfEdge currentEdge = edges[k];
+                HalfEdge nextEdge = edges[ ( k + 1 ) % 4 ];
+                HalfEdge prevEdge = edges[ ( k + 3 ) % 4 ];
+                currentEdge.nextEdge = nextEdge;
+                currentEdge.previousEdge = prevEdge;
             }
         }
         
@@ -98,9 +86,9 @@ public class HalfEdgeMesh
         Vector3[] vfVertices = mesh.vertices; // Vertex Face vertices
         int[] vfQuads = mesh.GetIndices(0); // Vertex Face quads
 
-        Dictionary<ulong, WingedEdge> dictionnaryWinged = new Dictionary<ulong, WingedEdge>();
+        Dictionary<ulong, HalfEdge> dictionnaryWinged = new Dictionary<ulong, HalfEdge>();
             
-        List<WingedEdge> faceEdges = new List<WingedEdge>();
+        List<HalfEdge> faceEdges = new List<HalfEdge>();
 
         //vertices
         for (int i = 0; i < vfVertices.Length; i++)
@@ -120,75 +108,29 @@ public class HalfEdgeMesh
                 var startVertex = vertices[vfQuads[ 4 * i + j]];
                 var endVertex = vertices[vfQuads[ 4 * i + (j + 1) % 4]];
                 ulong key = (UInt32) Mathf.Max(startVertex.getIndex(), endVertex.getIndex()) + ( (ulong) Mathf.Min(startVertex.getIndex(), endVertex.getIndex()) << 32 );
-                WingedEdge edge;
+                HalfEdge edge;
                 if ( !dictionnaryWinged.TryGetValue(key, out edge) )
                 {
-                    edge = new WingedEdge(edges.Count, startVertex, endVertex, face);
+                    edge = new HalfEdge(edges.Count, startVertex, endVertex, face);
                     edges.Add(edge);
                     dictionnaryWinged.Add(key, edge);
-                    if( j == 0) face.edge = edge;
                 }
                 else
                 {
-                    face.edge = edge;
-                    edge.leftFace = face;
+                    edge.Twin = new HalfEdge(edges.Count, startVertex, endVertex, face);
                 }
                 faceEdges.Add(edge);
             }
 
             for (int k = 0; k < faceEdges.Count; k++)
             {
-                WingedEdge currentEdge = faceEdges[k];
-                WingedEdge nextEdge = faceEdges[ ( k + 1 ) % 4 ];
-                WingedEdge prevEdge = faceEdges[ (k - 1 + faceEdges.Count) % faceEdges.Count ];
-                // traitement en fonction de l'orientation de l'arrête
-                if(currentEdge.rightFace == face)
-                {
-                    currentEdge.startCW = prevEdge;
-                    currentEdge.endCCW = nextEdge;
-                }
-                else
-                {
-                    currentEdge.startCCW = nextEdge;
-                    currentEdge.endCW = prevEdge;
-                }
+                HalfEdge currentEdge = faceEdges[k];
+                HalfEdge nextEdge = faceEdges[ ( k + 1 ) % 4 ];
+                HalfEdge prevEdge = faceEdges[ (k + 3) % 4 ];
+                currentEdge.nextEdge = nextEdge;
+                currentEdge.previousEdge = prevEdge;
             }
 
-        }
-
-        // A NE PAS SUPPRIMER !!!
-        // FONCTIONNE SI LE RESTE DU CODE FONCTIONNE !!
-        for (int i = 0; i < 4; i++)
-        {
-            WingedEdge currentEdge = faceEdges[i];
-            //if (currentEdge.leftFace == null)
-            //{
-                try
-                {
-                    Debug.Log("Next List");
-                    Debug.Log("start : " + currentEdge.startVertex.GetPos() + " end : " + currentEdge.endVertex.GetPos());
-                    List<WingedEdge> tempList = new List<WingedEdge>();
-                    tempList = currentEdge.getFanCCW(currentEdge.endVertex);
-                    currentEdge.endCW = tempList[tempList.Count - 1];
-                    tempList = currentEdge.getFanCW(currentEdge.startVertex);
-                    currentEdge.startCCW = tempList[tempList.Count - 1];
-                    Debug.Log("startCCW : " + currentEdge.startCCW.index);
-                }
-                catch (System.Exception)
-                {
-                    throw;
-                }
-            //}
-            /*if (currentEdge.rightFace == null)
-            {
-                Debug.Log("Next List");
-                List<WingedEdge> tempList = new List<WingedEdge>();
-                tempList = currentEdge.getFanCW(currentEdge.endVertex);
-                currentEdge.endCCW = tempList[tempList.Count - 1];
-                tempList = currentEdge.getFanCCW(currentEdge.startVertex);
-                currentEdge.startCW = tempList[tempList.Count - 1];
-            }*/
-            Debug.Log(i.ToString());
         }
         
     }
@@ -265,11 +207,13 @@ public class HalfEdgeMesh
 }
 
 
-public class HalfEdge : IComparable<WingedEdge>
+public class HalfEdge : IComparable<HalfEdge>
 {
 
     public HalfEdge nextEdge;
     public HalfEdge previousEdge;
+    public HalfEdge Twin;
+    Face face;
     public int index;
 
     public Vertex startVertex { get; set; }
@@ -277,14 +221,15 @@ public class HalfEdge : IComparable<WingedEdge>
     public Vertex endVertex { get; set; }
 
 
-    public HalfEdge(int index, Vertex startVertex, Vertex endVertex)
+    public HalfEdge(int index, Vertex startVertex, Vertex endVertex, Face face)
     {
         this.index = index;
         this.startVertex = startVertex;
         this.endVertex = endVertex;
+        this.face = face;
     }
 
-    public int CompareTo(WingedEdge other)
+    public int CompareTo(HalfEdge other)
     {
         if (other == null)
         {

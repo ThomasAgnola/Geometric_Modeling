@@ -10,26 +10,33 @@ public class QuadMeshGenerator : MonoBehaviour
 
     Mesh m_QuadMesh;
     Mesh m_WingedMesh;
+    Mesh m_HalfMesh;
     WingedEdgeMesh test;
+    HalfEdgeMesh halftest;
 
     private void Awake()
     {
         if (!m_mf) m_mf = GetComponent<MeshFilter>();
         /*
         m_QuadMesh = CreateQuad(new Vector3(4, 0, 2));
-        
-        Debug.Log(ExportMeshToCSV(m_QuadMesh));
-        */
-        m_QuadMesh = CreatePlane(new Vector3(2, 0, 2), 2, 1);
         //m_QuadMesh = CreateCube(new Vector3(2, 2, 2));
         //m_QuadMesh = CreateChip(new Vector3(2, 2, 2));
-        //test = new WingedEdgeMesh(m_QuadMesh);
-        test = new WingedEdgeMesh(m_QuadMesh);
+        m_mf.mesh = m_QuadMesh;
+        */
+
+        //m_QuadMesh = CreatePlane(new Vector3(2, 0, 2), 4, 4);
+        m_QuadMesh = CreateCube(new Vector3(2, 2, 2));
+
+        /*test = new WingedEdgeMesh(m_QuadMesh);
         m_WingedMesh = test.getMesh();
-        
         m_mf.mesh = m_WingedMesh;
-        //m_mf.mesh = m_QuadMesh;
-        Debug.Log(ExportMeshToCSV(m_WingedMesh));
+        Debug.Log(ExportMeshToCSV(m_WingedMesh));*/
+
+        halftest = new HalfEdgeMesh(m_QuadMesh);
+        m_HalfMesh = halftest.getMesh();
+        m_mf.mesh = m_HalfMesh;
+        Debug.Log(ExportMeshToCSV(m_HalfMesh));
+        
     }
     void Start()
     {
@@ -217,7 +224,7 @@ public class QuadMeshGenerator : MonoBehaviour
 
         DrawQuads();
 
-        DrawEdges();
+        //DrawEdges();
         
     }
 

@@ -21,6 +21,11 @@ public class CatmullClark : MonoBehaviour
     
     */
 
+    public CatmullClark(WingedEdgeMesh winged_mesh)
+    {
+        List<Face> faces = new List<Face>(winged_mesh.faces.Count * 2);
+    }
+
 
     // Start is called before the first frame update
     void Start()

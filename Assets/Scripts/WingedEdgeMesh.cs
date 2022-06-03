@@ -136,21 +136,16 @@ public class WingedEdgeMesh
                 faceEdges.Add(edge);
             }
 
-            for (int k = 0; k < faceEdges.Count; k++)
+            for (int k = 0; k < 4; k++)
             {
-                WingedEdge currentEdge = faceEdges[k];
-                WingedEdge nextEdge = faceEdges[ ( k + 1 ) % 4 ];
-                WingedEdge prevEdge = faceEdges[ (k - 1 + faceEdges.Count) % faceEdges.Count ];
+                WingedEdge currentEdge = faceEdges[i+k];
+                WingedEdge nextEdge = faceEdges[ ( i + k + 1 ) % 4 ];
+                WingedEdge prevEdge = faceEdges[ (i + k - 1 + faceEdges.Count) % faceEdges.Count ];
                 // traitement en fonction de l'orientation de l'arrête
                 if(currentEdge.rightFace == face)
                 {
                     currentEdge.startCW = prevEdge;
                     currentEdge.endCCW = nextEdge;
-                }
-                else
-                {
-                    currentEdge.startCCW = nextEdge;
-                    currentEdge.endCW = prevEdge;
                 }
             }
 
@@ -161,8 +156,8 @@ public class WingedEdgeMesh
         for (int i = 0; i < 4; i++)
         {
             WingedEdge currentEdge = faceEdges[i];
-            //if (currentEdge.leftFace == null)
-            //{
+            if (currentEdge.leftFace == null)
+            {
                 try
                 {
                     Debug.Log("Next List");
@@ -178,8 +173,8 @@ public class WingedEdgeMesh
                 {
                     throw;
                 }
-            //}
-            /*if (currentEdge.rightFace == null)
+            }
+            if (currentEdge.rightFace == null)
             {
                 Debug.Log("Next List");
                 List<WingedEdge> tempList = new List<WingedEdge>();
@@ -187,7 +182,7 @@ public class WingedEdgeMesh
                 currentEdge.endCCW = tempList[tempList.Count - 1];
                 tempList = currentEdge.getFanCCW(currentEdge.startVertex);
                 currentEdge.startCW = tempList[tempList.Count - 1];
-            }*/
+            }
             Debug.Log(i.ToString());
         }
         
@@ -221,12 +216,6 @@ public class WingedEdgeMesh
             quads[index++] = i+1;
             quads[index++] = i;
         }
-
-        /*for (int i = 0; i < edges.Count; i++)
-        {
-            quads[index++] = i;
-            
-        }*/
 
         mesh.vertices = tabVertices;
         mesh.SetIndices(quads, MeshTopology.Quads, 0);
@@ -306,12 +295,19 @@ public class WingedEdge : IComparable<WingedEdge>
         bool isDone = false;
         if(positionVertex == endVertex) 
         {
+            Debug.Log("start endCCW : " + this.endCCW.index);
             FanCCW.Add(this.endCCW);
             while (!isDone)
             {
                 int position = FanCCW.Count -1 ;
+                Debug.Log("endCCW " + FanCCW.Count + " : " + this.endCCW.index);
                 WingedEdge lastEdge = FanCCW[position];
                 WingedEdge beforeLasteEdge = FanCCW[position - 1];
+                if(lastEdge == null){
+                    Debug.Log("erreur lastedge est null ! ");
+                    Debug.Log("FanCCW size : " + FanCCW.Count);
+                    break;
+                }
                 if(lastEdge.leftFace == null) {
                     isDone = true;
                     break;
@@ -445,7 +441,7 @@ public class WingedEdge : IComparable<WingedEdge>
 
 public class Vertex
 {
-    private int index;
+    public int index;
     private Vector3 pos;
 
     public Vertex(int i, Vector3 pos)

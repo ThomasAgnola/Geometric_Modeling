@@ -118,6 +118,8 @@ public class HalfEdgeMesh
                 else
                 {
                     edge.Twin = new HalfEdge(edges.Count, startVertex, endVertex, face);
+                    edge = new HalfEdge(edges.Count, startVertex, endVertex, face);
+                    edges.Add(edge);
                 }
                 faceEdges.Add(edge);
             }
@@ -152,23 +154,15 @@ public class HalfEdgeMesh
         Debug.Log("faces nbr : " + faces.Count);
 
         int index = 0;
-        quads[index++] = 0;
-        quads[index++] = 1;
-        quads[index++] = 3;
-        quads[index++] = 2;
-        for (int i = 4; i < (faces.Count*4); i+=4)
+        int face_jump = 0;
+        for (int i = 0; i < faces.Count; i++)
         {
-            quads[index++] = i-2;
-            quads[index++] = i-1;
-            quads[index++] = i+1;
-            quads[index++] = i;
+            quads[index++] = edges[face_jump].startVertex.index;
+            quads[index++] = edges[face_jump+1].startVertex.index;
+            quads[index++] = edges[face_jump+2].startVertex.index;
+            quads[index++] = edges[face_jump+3].startVertex.index;
+            face_jump = 4 * (i+1) ;
         }
-
-        /*for (int i = 0; i < edges.Count; i++)
-        {
-            quads[index++] = i;
-            
-        }*/
 
         mesh.vertices = tabVertices;
         mesh.SetIndices(quads, MeshTopology.Quads, 0);

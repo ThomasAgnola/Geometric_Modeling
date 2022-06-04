@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -13,6 +14,7 @@ public class QuadMeshGenerator : MonoBehaviour
     Mesh m_HalfMesh;
     WingedEdgeMesh test;
     HalfEdgeMesh halftest;
+    Dictionary<ulong, HalfEdge> dictionnaryWinged = new Dictionary<ulong, HalfEdge>();
 
     private void Awake()
     {
@@ -33,6 +35,7 @@ public class QuadMeshGenerator : MonoBehaviour
         Debug.Log(ExportMeshToCSV(m_WingedMesh));*/
 
         halftest = new HalfEdgeMesh(m_QuadMesh);
+        halftest.CatGenerator();
         m_HalfMesh = halftest.getMesh();
         m_mf.mesh = m_HalfMesh;
         Debug.Log(ExportMeshToCSV(m_HalfMesh));
@@ -224,7 +227,9 @@ public class QuadMeshGenerator : MonoBehaviour
 
         DrawQuads();
 
-        //DrawEdges();
+        //DrawWingedEdges();
+
+        DrawHalfEdges();
         
     }
 
@@ -264,7 +269,7 @@ public class QuadMeshGenerator : MonoBehaviour
         }*/
     }
 
-    void DrawEdges(){
+    void DrawWingedEdges(){
         GUIStyle guiStyle = new GUIStyle();
         guiStyle.fontSize = 18;
         guiStyle.normal.textColor = Color.blue;
@@ -290,6 +295,36 @@ public class QuadMeshGenerator : MonoBehaviour
             Gizmos.DrawLine(startpos, endpos);
         }
     }
+    
+    void DrawHalfEdges(){
+        GUIStyle guiStyle = new GUIStyle();
+        guiStyle.fontSize = 18;
+        guiStyle.normal.textColor = Color.blue;
+
+        for(int i = 0; i < halftest.edges.Count; i++)
+        {
+            HalfEdge currentEdge = halftest.edges[i];
+            string Twin = null;
+            Vector3 startpos = transform.TransformPoint(currentEdge.startVertex.GetPos());
+            Vector3 endpos = transform.TransformPoint(currentEdge.endVertex.GetPos());
+            if ( currentEdge.Twin != null ) Twin = currentEdge.Twin.index.ToString();
+            ulong key = (UInt32) Mathf.Max(currentEdge.startVertex.getIndex(), currentEdge.endVertex.getIndex()) + ( (ulong) Mathf.Min(currentEdge.startVertex.getIndex(), currentEdge.endVertex.getIndex()) << 32 );
+            HalfEdge edge;
+            if ( !dictionnaryWinged.TryGetValue(key, out edge) )
+            {
+                Handles.Label((startpos+endpos)/2, new GUIContent(i.ToString() + "\n" +
+                "Twin: " + Twin ), guiStyle);
+                dictionnaryWinged.Add(key, currentEdge);
+            }
+            else
+            {
+                Handles.Label((startpos+endpos)/2, new GUIContent("\n" + "\n" + i.ToString() + "\n" +
+                "Twin: " + Twin ), guiStyle);
+            }
+            Gizmos.DrawLine(startpos, endpos);
+        }
+    }
+
     string ExportMeshToCSV(Mesh mesh)
     {
         List<string> lines = new List<string>();

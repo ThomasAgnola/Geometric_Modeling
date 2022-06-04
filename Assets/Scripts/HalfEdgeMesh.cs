@@ -109,6 +109,7 @@ public class HalfEdgeMesh
                 var endVertex = vertices[vfQuads[ 4 * i + (j + 1) % 4]];
                 ulong key = (UInt32) Mathf.Max(startVertex.getIndex(), endVertex.getIndex()) + ( (ulong) Mathf.Min(startVertex.getIndex(), endVertex.getIndex()) << 32 );
                 HalfEdge edge;
+                HalfEdge twinedge;
                 if ( !dictionnaryWinged.TryGetValue(key, out edge) )
                 {
                     edge = new HalfEdge(edges.Count, startVertex, endVertex, face);
@@ -118,8 +119,9 @@ public class HalfEdgeMesh
                 else
                 {
                     edge.Twin = new HalfEdge(edges.Count, startVertex, endVertex, face);
-                    edge = new HalfEdge(edges.Count, startVertex, endVertex, face);
-                    edges.Add(edge);
+                    twinedge = new HalfEdge(edges.Count, startVertex, endVertex, face);
+                    twinedge.Twin = edge;
+                    edges.Add(twinedge);
                 }
                 faceEdges.Add(edge);
             }
@@ -135,6 +137,14 @@ public class HalfEdgeMesh
 
         }
         
+    }
+
+    public void CatGenerator()
+    {
+        CatmullClark catmul = new CatmullClark(this);
+        faces = catmul.GetFaces();
+        edges = catmul.GetHalfEdges();
+        vertices = catmul.GetVertices();
     }
 
     public Mesh getMesh()

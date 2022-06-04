@@ -442,12 +442,17 @@ public class WingedEdge : IComparable<WingedEdge>
 public class Vertex
 {
     public int index;
-    private Vector3 pos;
+    public Vector3 pos;
 
     public Vertex(int i, Vector3 pos)
     {
         index = i;
         this.pos = pos;
+    }
+
+    public Vertex()
+    {
+        
     }
 
     public Vector3 GetPos()

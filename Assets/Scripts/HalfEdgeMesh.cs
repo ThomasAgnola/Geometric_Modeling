@@ -8,6 +8,7 @@ public class HalfEdgeMesh
     public List<HalfEdge> edges = new List<HalfEdge>();
     public List<Face> faces = new List<Face>();
     public List<Vertex> vertices = new List<Vertex>();
+    public List<HalfEdge> faceEdges = new List<HalfEdge>();
 
     public HalfEdgeMesh()
     {
@@ -86,9 +87,8 @@ public class HalfEdgeMesh
         Vector3[] vfVertices = mesh.vertices; // Vertex Face vertices
         int[] vfQuads = mesh.GetIndices(0); // Vertex Face quads
 
-        Dictionary<ulong, HalfEdge> dictionnaryWinged = new Dictionary<ulong, HalfEdge>();
+        Dictionary<ulong, HalfEdge> dictionnaryHalf = new Dictionary<ulong, HalfEdge>();
             
-        List<HalfEdge> faceEdges = new List<HalfEdge>();
 
         //vertices
         for (int i = 0; i < vfVertices.Length; i++)
@@ -110,11 +110,12 @@ public class HalfEdgeMesh
                 ulong key = (UInt32) Mathf.Max(startVertex.getIndex(), endVertex.getIndex()) + ( (ulong) Mathf.Min(startVertex.getIndex(), endVertex.getIndex()) << 32 );
                 HalfEdge edge;
                 HalfEdge twinedge;
-                if ( !dictionnaryWinged.TryGetValue(key, out edge) )
+                // test de la présence de l'edge dans la liste pour ajouter la Twin
+                if ( !dictionnaryHalf.TryGetValue(key, out edge) )
                 {
                     edge = new HalfEdge(edges.Count, startVertex, endVertex, face);
                     edges.Add(edge);
-                    dictionnaryWinged.Add(key, edge);
+                    dictionnaryHalf.Add(key, edge);
                 }
                 else
                 {
@@ -141,6 +142,7 @@ public class HalfEdgeMesh
 
     public void CatGenerator()
     {
+        // Execution du catmulclark et récupération de la nouvelle forme
         CatmullClark catmul = new CatmullClark(this);
         faces = catmul.GetFaces();
         edges = catmul.GetHalfEdges();
@@ -153,6 +155,7 @@ public class HalfEdgeMesh
 
         Vector3[] tabVertices = new Vector3[vertices.Count];
 
+        // Initialisation 
         for (int i = 0; i < vertices.Count; i++)
         {
             tabVertices[i] = vertices[i].GetPos();
@@ -167,6 +170,7 @@ public class HalfEdgeMesh
         int face_jump = 0;
         for (int i = 0; i < faces.Count; i++)
         {
+            // ajout des index dans le tableau de quads
             quads[index++] = edges[face_jump].startVertex.index;
             quads[index++] = edges[face_jump+1].startVertex.index;
             quads[index++] = edges[face_jump+2].startVertex.index;

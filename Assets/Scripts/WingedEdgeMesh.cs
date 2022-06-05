@@ -121,6 +121,7 @@ public class WingedEdgeMesh
                 var endVertex = vertices[vfQuads[ 4 * i + (j + 1) % 4]];
                 ulong key = (UInt32) Mathf.Max(startVertex.getIndex(), endVertex.getIndex()) + ( (ulong) Mathf.Min(startVertex.getIndex(), endVertex.getIndex()) << 32 );
                 WingedEdge edge;
+                // test de la présence de l'edge pour affecter la leftFace et ne pas la recopier
                 if ( !dictionnaryWinged.TryGetValue(key, out edge) )
                 {
                     edge = new WingedEdge(edges.Count, startVertex, endVertex, face);
@@ -136,6 +137,8 @@ public class WingedEdgeMesh
                 faceEdges.Add(edge);
             }
 
+            // devrait boucler sur chaque edge
+            // 
             for (int k = 0; k < 4; k++)
             {
                 WingedEdge currentEdge = faceEdges[i+k];
@@ -151,11 +154,11 @@ public class WingedEdgeMesh
 
         }
 
-        // A NE PAS SUPPRIMER !!!
-        // FONCTIONNE SI LE RESTE DU CODE FONCTIONNE !!
+
         for (int i = 0; i < 4; i++)
         {
             WingedEdge currentEdge = faceEdges[i];
+            // Affectation des CW et CCW manquante
             if (currentEdge.leftFace == null)
             {
                 try
@@ -194,6 +197,7 @@ public class WingedEdgeMesh
 
         Vector3[] tabVertices = new Vector3[vertices.Count];
 
+        // Récupération des vertices
         for (int i = 0; i < vertices.Count; i++)
         {
             tabVertices[i] = vertices[i].GetPos();
@@ -205,10 +209,13 @@ public class WingedEdgeMesh
         Debug.Log("faces nbr : " + faces.Count);
 
         int index = 0;
+        // Création de la première face
         quads[index++] = 0;
         quads[index++] = 1;
         quads[index++] = 3;
         quads[index++] = 2;
+
+        // Ajout des face suivantes
         for (int i = 4; i < (faces.Count*4); i+=4)
         {
             quads[index++] = i-2;
@@ -293,10 +300,12 @@ public class WingedEdge : IComparable<WingedEdge>
         List<WingedEdge> FanCCW = new List<WingedEdge>();
         FanCCW.Add(this);
         bool isDone = false;
+        // regarde si on est au debut ou la fin de l'edge
         if(positionVertex == endVertex) 
         {
             Debug.Log("start endCCW : " + this.endCCW.index);
             FanCCW.Add(this.endCCW);
+            // boucle jusqu'a trouver la derniere iteration
             while (!isDone)
             {
                 int position = FanCCW.Count -1 ;
@@ -335,6 +344,7 @@ public class WingedEdge : IComparable<WingedEdge>
         else if (positionVertex == startVertex)
         {
             FanCCW.Add(this.startCCW);
+            // boucle jusqu'a trouver la derniere iteration
             while (!isDone)
             {
                 int position = FanCCW.Count -1 ;
@@ -371,9 +381,11 @@ public class WingedEdge : IComparable<WingedEdge>
         List<WingedEdge> FanCW = new List<WingedEdge>();
         FanCW.Add(this);
         bool isDone = false;
+        // regarde si on est au debut ou la fin de l'edge
         if(positionVertex == endVertex) 
         {
             FanCW.Add(this.endCW);
+            // boucle jusqu'a trouver la derniere iteration
             while (!isDone)
             {
                 int position = FanCW.Count -1 ;
@@ -406,6 +418,7 @@ public class WingedEdge : IComparable<WingedEdge>
         else if (positionVertex == startVertex)
         {
             FanCW.Add(this.startCW);
+            // boucle jusqu'a trouver la derniere iteration
             while (!isDone)
             {
                 int position = FanCW.Count -1 ;

@@ -7,6 +7,9 @@ using UnityEditor;
 public class QuadMeshGenerator : MonoBehaviour
 {
     [SerializeField] MeshFilter m_mf;
+    [SerializeField] bool CatMulClarkApply;
+    [SerializeField] bool UseCube;
+    [SerializeField] bool UseClip;
     // Start is called before the first frame update
 
     Mesh m_QuadMesh;
@@ -14,7 +17,7 @@ public class QuadMeshGenerator : MonoBehaviour
     Mesh m_HalfMesh;
     WingedEdgeMesh test;
     HalfEdgeMesh halftest;
-    Dictionary<ulong, HalfEdge> dictionnaryWinged = new Dictionary<ulong, HalfEdge>();
+    Dictionary<ulong, HalfEdge> Drawingdictionnary = new Dictionary<ulong, HalfEdge>();
 
     private void Awake()
     {
@@ -26,8 +29,10 @@ public class QuadMeshGenerator : MonoBehaviour
         m_mf.mesh = m_QuadMesh;
         */
 
-        //m_QuadMesh = CreatePlane(new Vector3(2, 0, 2), 4, 4);
-        m_QuadMesh = CreateCube(new Vector3(2, 2, 2));
+        m_QuadMesh = CreatePlane(new Vector3(2, 0, 2), 2, 1);
+        if(UseCube) m_QuadMesh = CreateCube(new Vector3(2, 2, 2));
+        if(UseClip) m_QuadMesh = CreateChip(new Vector3(2, 2, 2));
+        //m_QuadMesh = CreateCube(new Vector3(2, 2, 2));
 
         /*test = new WingedEdgeMesh(m_QuadMesh);
         m_WingedMesh = test.getMesh();
@@ -35,7 +40,7 @@ public class QuadMeshGenerator : MonoBehaviour
         Debug.Log(ExportMeshToCSV(m_WingedMesh));*/
 
         halftest = new HalfEdgeMesh(m_QuadMesh);
-        halftest.CatGenerator();
+        if(CatMulClarkApply) halftest.CatGenerator();
         m_HalfMesh = halftest.getMesh();
         m_mf.mesh = m_HalfMesh;
         Debug.Log(ExportMeshToCSV(m_HalfMesh));
@@ -310,16 +315,16 @@ public class QuadMeshGenerator : MonoBehaviour
             if ( currentEdge.Twin != null ) Twin = currentEdge.Twin.index.ToString();
             ulong key = (UInt32) Mathf.Max(currentEdge.startVertex.getIndex(), currentEdge.endVertex.getIndex()) + ( (ulong) Mathf.Min(currentEdge.startVertex.getIndex(), currentEdge.endVertex.getIndex()) << 32 );
             HalfEdge edge;
-            if ( !dictionnaryWinged.TryGetValue(key, out edge) )
+            if ( !Drawingdictionnary.TryGetValue(key, out edge) )
             {
                 Handles.Label((startpos+endpos)/2, new GUIContent(i.ToString() + "\n" +
-                "Twin: " + Twin ), guiStyle);
-                dictionnaryWinged.Add(key, currentEdge);
+                "Edge: " + currentEdge.index ), guiStyle);
+                Drawingdictionnary.Add(key, currentEdge);
             }
             else
             {
-                Handles.Label((startpos+endpos)/2, new GUIContent("\n" + "\n" + i.ToString() + "\n" +
-                "Twin: " + Twin ), guiStyle);
+                Handles.Label((startpos+endpos)/2, new GUIContent(" " + "\n" + " " + "\n" + i.ToString() + "\n" +
+                "Edge: " + currentEdge.index ), guiStyle);
             }
             Gizmos.DrawLine(startpos, endpos);
         }
